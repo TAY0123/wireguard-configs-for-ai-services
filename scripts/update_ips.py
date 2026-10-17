@@ -43,7 +43,7 @@ SERVICES = {
 # Supplement hostnames absent from Cloudflare's application catalog.
 # These are included on every refresh, regardless of catalog changes.
 EXTRA_HOSTNAMES = {
-    "openai": {"developers.openai.com", "platform.openai.com"},
+    "openai": {"chatgpt.site", "developers.openai.com", "platform.openai.com"},
 }
 
 # Static "floor" CIDRs always unioned with the freshly-resolved ranges, then
