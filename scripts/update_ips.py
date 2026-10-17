@@ -66,6 +66,44 @@ STATIC = {
     },
 }
 
+# User-pinned networks to preserve across scheduled Cloudflare/DNS refreshes.
+# NOTE: CDN/Cloudflare CIDRs may route unrelated sites through WireGuard.
+PINNED_CIDRS = {
+    "openai": {
+        "ipv4": [
+            "64.239.109.0/24",
+            "64.239.123.0/24",
+            "104.18.32.0/23",
+            "104.18.35.28/32",
+            "104.18.37.0/24",
+            "104.18.39.85/32",
+            "104.18.41.0/24",
+            "162.159.140.0/24",
+            "172.64.146.0/24",
+            "172.64.148.171/32",
+            "172.64.150.0/24",
+            "172.64.152.228/32",
+            "172.64.154.0/23",
+            "172.65.90.0/24",
+            "172.66.0.0/24",
+            "188.114.98.0/23",
+        ],
+        "ipv6": [
+            "2606:4700:7::/48",
+            "2606:4700:78::/48",
+            "2606:4700:4400::/48",
+            "2606:4700:4402::/48",
+            "2606:4700:4408::/47",
+            "2606:4700:440c::/48",
+            "2a06:98c1:58::/48",
+            "2a06:98c1:3101::/48",
+            "2a06:98c1:3108::/48",
+            "2a06:98c1:310b::/48",
+            "2a06:98c1:310c::/47",
+        ],
+    },
+}
+
 CF_API = "https://api.cloudflare.com/client/v4"
 
 
@@ -177,7 +215,12 @@ def main():
         )
         v4set, v6set = resolve(hosts)
         floor = STATIC.get(service, {})
-        v4, v6 = aggregate(v4set, v6set, floor.get("ipv4"), floor.get("ipv6"))
+        pinned = PINNED_CIDRS.get(service, {})
+        v4, v6 = aggregate(
+            v4set, v6set,
+            (floor.get("ipv4") or []) + (pinned.get("ipv4") or []),
+            (floor.get("ipv6") or []) + (pinned.get("ipv6") or []),
+        )
         data = {
             "service": service,
             "application": app_name,
@@ -192,6 +235,11 @@ def main():
                 "ipv6": sorted(v6set),
             },
         }
+        if pinned:
+            data["pinned"] = {
+                "ipv4": pinned.get("ipv4", []),
+                "ipv6": pinned.get("ipv6", []),
+            }
         out = DATA / ("%s.json" % service)
         prev = out.read_text() if out.exists() else None
         # compare ignoring the 'updated' timestamp so we only churn on real changes
