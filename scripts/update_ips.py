@@ -40,6 +40,12 @@ SERVICES = {
     "claude": "Claude",
 }
 
+# Supplement hostnames absent from Cloudflare's application catalog.
+# These are included on every refresh, regardless of catalog changes.
+EXTRA_HOSTNAMES = {
+    "openai": {"developers.openai.com"},
+}
+
 # Static "floor" CIDRs always unioned with the freshly-resolved ranges, then
 # collapsed. Use this for services that publish a stable, authoritative block
 # wider than a single just-resolved /24 (so we never blackhole IPs that live in
@@ -165,7 +171,10 @@ def main():
     changed = []
     now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     for service, app_name in SERVICES.items():
-        hosts = cf_hostnames(token, account, app_name, service)
+        hosts = sorted(
+            set(cf_hostnames(token, account, app_name, service))
+            | EXTRA_HOSTNAMES.get(service, set())
+        )
         v4set, v6set = resolve(hosts)
         floor = STATIC.get(service, {})
         v4, v6 = aggregate(v4set, v6set, floor.get("ipv4"), floor.get("ipv6"))
