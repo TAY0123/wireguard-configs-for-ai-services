@@ -3,7 +3,7 @@
   "application": "ChatGPT",
   "source": "cloudflare-resource-library",
   "resolver": "1.1.1.1-doh",
-  "updated": "2026-10-19T08:51:01Z",
+  "updated": "2026-10-26T08:53:26Z",
   "hostnames": [
     "api.openai.com",
     "auth.openai.com",
@@ -53,8 +53,8 @@
   ],
   "raw": {
     "ipv4": [
-      "64.239.109.65",
-      "64.239.123.65",
+      "64.239.109.129",
+      "64.239.123.129",
       "104.18.22.186",
       "104.18.23.186",
       "104.18.32.47",
